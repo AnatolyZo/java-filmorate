@@ -1,12 +1,21 @@
 package ru.yandex.practicum.filmorate.model;
 
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.*;
+import lombok.*;
+import ru.yandex.practicum.filmorate.validation.annotations.IsDateAfter;
 
-/**
- * Film.
- */
-@Getter
-@Setter
+import java.time.LocalDate;
+
+@Data
+@Builder
 public class Film {
+    private Long id;
+    @NotBlank(message = "Название фильма не должно быть пустым")
+    private String name;
+    @Size(max = 200, message = "Описание фильма не должно превышать 200 символов")
+    private String description;
+    @IsDateAfter
+    private LocalDate releaseDate;
+    @Positive(message = "Продолжительность фильма должна быть больше 0")
+    private int duration;
 }
