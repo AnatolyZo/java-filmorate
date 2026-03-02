@@ -29,15 +29,16 @@ public class FilmController {
         ValidationResults.extract(bindingResult);
 
         film.setId(getNextId());
+        log.debug("Новому фильму присвоен id {}", film.getId());
 
         try {
             films.put(film.getId(), film);
+            log.debug("Добавлен новый фильм с id {}", film.getId());
         } catch (RuntimeException e) {
             log.error("Ошибка добавления нового фильма", e);
             throw new RuntimeException("Ошибка добавления нового фильма");
         }
 
-        log.debug("Фильму {} присвоен id {}", film.getName(), film.getId());
         return film;
     }
 
@@ -55,12 +56,12 @@ public class FilmController {
 
             try {
                 updateFields(updatingFilm, newFilm);
+                log.debug("Обновлены данные фильма {} c id {}", newFilm, newFilm.getId());
             } catch (RuntimeException e) {
                 log.error("Ошибка обновления данных фильма", e);
                 throw new RuntimeException("Ошибка обновления данных фильма");
             }
 
-            log.debug("Обновлены данные фильма {} c id {}", newFilm, newFilm.getId());
             return updatingFilm;
         }
 
@@ -71,9 +72,13 @@ public class FilmController {
     //Метод по обновлению полей
     private void updateFields(Film updatingFilm, Film newFilm) {
         updatingFilm.setName(newFilm.getName());
+        log.debug("У фильма c id {} обновлено название на {}", updatingFilm.getId(), newFilm.getName());
         updatingFilm.setDescription(newFilm.getDescription());
+        log.debug("У фильма c id {} обновлено описание на {}", updatingFilm.getId(), newFilm.getDescription());
         updatingFilm.setReleaseDate(newFilm.getReleaseDate());
+        log.debug("У фильма c id {} обновлена дата выхода фильма на {}", updatingFilm.getId(), newFilm.getReleaseDate());
         updatingFilm.setDuration(newFilm.getDuration());
+        log.debug("У фильма c id {} обновлена продолжительность на {}", updatingFilm.getId(), newFilm.getDuration());
     }
 
     //Метод генерации id

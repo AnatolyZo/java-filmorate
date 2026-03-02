@@ -18,11 +18,8 @@ import ru.yandex.practicum.filmorate.model.Film;
 import java.time.LocalDate;
 import java.util.Set;
 
-@SpringBootTest
 public class FilmsPutTests {
-    @Autowired
     private FilmController filmController;
-
     private Validator validator;
 
     @AfterEach
@@ -124,7 +121,18 @@ public class FilmsPutTests {
                 .duration(101)
                 .build();
 
-        filmController.getFilms().put(film.getId(), film);
+        BeanPropertyBindingResult bindingResultFilm = new BeanPropertyBindingResult(film, "film");
+        Set<ConstraintViolation<Film>> violationsFilm = validator.validate(film);
+
+        for (ConstraintViolation<Film> violation : violationsFilm) {
+            bindingResultFilm.rejectValue(
+                    violation.getPropertyPath().toString(),
+                    violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
+                    violation.getMessage()
+            );
+        }
+
+        filmController.addFilm(film, bindingResultFilm);
 
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(updateToFilm, "film");
         Set<ConstraintViolation<Film>> violations = validator.validate(updateToFilm);
@@ -147,7 +155,7 @@ public class FilmsPutTests {
         Film film = Film.builder()
                 .id(1L)
                 .name("Фильм")
-                .description(new String((new char[201])))
+                .description("Описание фильма")
                 .releaseDate(LocalDate.of(1989, 12, 12))
                 .duration(100)
                 .build();
@@ -160,7 +168,18 @@ public class FilmsPutTests {
                 .duration(101)
                 .build();
 
-        filmController.getFilms().put(film.getId(), film);
+        BeanPropertyBindingResult bindingResultFilm = new BeanPropertyBindingResult(film, "film");
+        Set<ConstraintViolation<Film>> violationsFilm = validator.validate(film);
+
+        for (ConstraintViolation<Film> violation : violationsFilm) {
+            bindingResultFilm.rejectValue(
+                    violation.getPropertyPath().toString(),
+                    violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
+                    violation.getMessage()
+            );
+        }
+
+        filmController.addFilm(film, bindingResultFilm);
 
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(updateToFilm, "film");
         Set<ConstraintViolation<Film>> violations = validator.validateValue(Film.class,
@@ -196,7 +215,18 @@ public class FilmsPutTests {
                 .duration(101)
                 .build();
 
-        filmController.getFilms().put(film.getId(), film);
+        BeanPropertyBindingResult bindingResultFilm = new BeanPropertyBindingResult(film, "film");
+        Set<ConstraintViolation<Film>> violationsFilm = validator.validate(film);
+
+        for (ConstraintViolation<Film> violation : violationsFilm) {
+            bindingResultFilm.rejectValue(
+                    violation.getPropertyPath().toString(),
+                    violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
+                    violation.getMessage()
+            );
+        }
+
+        filmController.addFilm(film, bindingResultFilm);
 
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(updateToFilm, "film");
         Set<ConstraintViolation<Film>> violations = validator.validate(updateToFilm);
@@ -232,7 +262,18 @@ public class FilmsPutTests {
                 .duration(101)
                 .build();
 
-        filmController.getFilms().put(film.getId(), film);
+        BeanPropertyBindingResult bindingResultFilm = new BeanPropertyBindingResult(film, "film");
+        Set<ConstraintViolation<Film>> violationsFilm = validator.validate(film);
+
+        for (ConstraintViolation<Film> violation : violationsFilm) {
+            bindingResultFilm.rejectValue(
+                    violation.getPropertyPath().toString(),
+                    violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
+                    violation.getMessage()
+            );
+        }
+
+        filmController.addFilm(film, bindingResultFilm);
 
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(updateToFilm, "film");
         Set<ConstraintViolation<Film>> violations = validator.validateValue(Film.class, "releaseDate",
@@ -267,7 +308,18 @@ public class FilmsPutTests {
                 .duration(1)
                 .build();
 
-        filmController.getFilms().put(film.getId(), film);
+        BeanPropertyBindingResult bindingResultFilm = new BeanPropertyBindingResult(film, "film");
+        Set<ConstraintViolation<Film>> violationsFilm = validator.validate(film);
+
+        for (ConstraintViolation<Film> violation : violationsFilm) {
+            bindingResultFilm.rejectValue(
+                    violation.getPropertyPath().toString(),
+                    violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
+                    violation.getMessage()
+            );
+        }
+
+        filmController.addFilm(film, bindingResultFilm);
 
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(updateToFilm, "film");
         Set<ConstraintViolation<Film>> violations = validator.validate(updateToFilm);
@@ -303,7 +355,18 @@ public class FilmsPutTests {
                 .duration(0)
                 .build();
 
-        filmController.getFilms().put(film.getId(), film);
+        BeanPropertyBindingResult bindingResultFilm = new BeanPropertyBindingResult(film, "film");
+        Set<ConstraintViolation<Film>> violationsFilm = validator.validate(film);
+
+        for (ConstraintViolation<Film> violation : violationsFilm) {
+            bindingResultFilm.rejectValue(
+                    violation.getPropertyPath().toString(),
+                    violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
+                    violation.getMessage()
+            );
+        }
+
+        filmController.addFilm(film, bindingResultFilm);
 
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(updateToFilm, "film");
         Set<ConstraintViolation<Film>> violations = validator.validateValue(Film.class, "duration", 0);

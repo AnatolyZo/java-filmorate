@@ -29,16 +29,17 @@ public class UserController {
         ValidationResults.extract(bindingResult);
 
         user.setId(getNextId());
+        log.debug("Новому пользователю присвоен id {}", user.getId());
         fillNameIfEmpty(user);
 
         try {
             users.put(user.getId(), user);
+            log.debug("Добавлен новый пользователь {}", user.getName());
         } catch (RuntimeException e) {
             log.error("Ошибка добавления нового пользователя", e);
             throw new RuntimeException("Ошибка добавления нового пользователя");
         }
 
-        log.debug("Пользователю {} присвоен id {}", user.getName(), user.getId());
         return user;
     }
 
@@ -57,12 +58,12 @@ public class UserController {
 
             try {
                 updateFields(updatingUser, newUser);
+                log.debug("Обновлены данные пользователя {} c id {}", newUser, newUser.getId());
             } catch (RuntimeException e) {
                 log.error("Ошибка обновления данных пользователя", e);
                 throw new RuntimeException("Ошибка обновления данных пользователя");
             }
 
-            log.debug("Обновлены данные пользователя {} c id {}", newUser, newUser.getId());
             return updatingUser;
         }
 
@@ -73,9 +74,13 @@ public class UserController {
     //Метод по обновлению полей
     private void updateFields(User updatingUser, User newUser) {
         updatingUser.setEmail(newUser.getEmail());
+        log.debug("У пользователя c id {} обновлен email на {}", updatingUser.getId(), newUser.getEmail());
         updatingUser.setLogin(newUser.getLogin());
+        log.debug("У пользователя c id {} обновлен логин на {}", updatingUser.getId(), newUser.getLogin());
         updatingUser.setName(newUser.getName());
+        log.debug("У пользователя c id {} обновлено имя на {}", updatingUser.getId(), newUser.getName());
         updatingUser.setBirthday(newUser.getBirthday());
+        log.debug("У пользователя c id {} обновлена дата рождения на {}", updatingUser.getId(), newUser.getBirthday());
     }
 
     //Метод генерации id
@@ -92,6 +97,7 @@ public class UserController {
     private void fillNameIfEmpty(User user) {
         if (user.getName() == null) {
             user.setName(user.getLogin());
+            log.debug("У пользователя с id {} заполнено пустое имя на {}", user.getName(), user.getLogin());
         }
     }
 }

@@ -1,11 +1,14 @@
 package ru.yandex.practicum.filmorate;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.validation.BeanPropertyBindingResult;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.model.Film;
 
@@ -13,11 +16,11 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
-@SpringBootTest
 class FilmsGetTests {
-    @Autowired
     private FilmController filmController;
+    private Validator validator;
 
     @AfterEach
     void afterEach() {
@@ -27,6 +30,8 @@ class FilmsGetTests {
     @BeforeEach
     void setUp() {
         filmController = new FilmController();
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        validator = factory.getValidator();
     }
 
     @Test
@@ -67,9 +72,43 @@ class FilmsGetTests {
         expectedMap.put(film2.getId(), film2);
         expectedMap.put(film3.getId(), film3);
 
-        filmController.getFilms().put(film1.getId(), film1);
-        filmController.getFilms().put(film2.getId(), film2);
-        filmController.getFilms().put(film3.getId(), film3);
+        BeanPropertyBindingResult bindingResult1 = new BeanPropertyBindingResult(film1, "film");
+        Set<ConstraintViolation<Film>> violations1 = validator.validate(film1);
+
+        for (ConstraintViolation<Film> violation : violations1) {
+            bindingResult1.rejectValue(
+                    violation.getPropertyPath().toString(),
+                    violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
+                    violation.getMessage()
+            );
+        }
+
+        filmController.addFilm(film1, bindingResult1);
+
+        BeanPropertyBindingResult bindingResult2 = new BeanPropertyBindingResult(film2, "film");
+        Set<ConstraintViolation<Film>> violations2 = validator.validate(film2);
+
+        for (ConstraintViolation<Film> violation : violations2) {
+            bindingResult2.rejectValue(
+                    violation.getPropertyPath().toString(),
+                    violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
+                    violation.getMessage()
+            );
+        }
+
+        filmController.addFilm(film2, bindingResult2);
+
+        BeanPropertyBindingResult bindingResult3 = new BeanPropertyBindingResult(film3, "film");
+        Set<ConstraintViolation<Film>> violations3 = validator.validate(film3);
+
+        for (ConstraintViolation<Film> violation : violations3) {
+            bindingResult3.rejectValue(
+                    violation.getPropertyPath().toString(),
+                    violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
+                    violation.getMessage()
+            );
+        }
+        filmController.addFilm(film3, bindingResult3);
 
         Collection<Film> films = filmController.findAllFilms();
 

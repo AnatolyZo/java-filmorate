@@ -8,8 +8,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.validation.BeanPropertyBindingResult;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
@@ -18,11 +16,8 @@ import ru.yandex.practicum.filmorate.model.User;
 import java.time.LocalDate;
 import java.util.Set;
 
-@SpringBootTest
 public class UsersPutTests {
-    @Autowired
     private UserController userController;
-
     private Validator validator;
 
     @AfterEach
@@ -56,7 +51,18 @@ public class UsersPutTests {
                 .birthday(LocalDate.of(1988, 11, 11))
                 .build();
 
-        userController.getUsers().put(user.getId(), user);
+        BeanPropertyBindingResult bindingResultUser = new BeanPropertyBindingResult(user, "user");
+        Set<ConstraintViolation<User>> violationsUser = validator.validate(user);
+
+        for (ConstraintViolation<User> violation : violationsUser) {
+            bindingResultUser.rejectValue(
+                    violation.getPropertyPath().toString(),
+                    violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
+                    violation.getMessage()
+            );
+        }
+
+        userController.addUser(user, bindingResultUser);
 
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(updateToUser, "user");
         Set<ConstraintViolation<User>> violations = validator.validate(updateToUser);
@@ -115,7 +121,18 @@ public class UsersPutTests {
                 .birthday(LocalDate.of(1984, 11, 18))
                 .build();
 
-        userController.getUsers().put(user.getId(), user);
+        BeanPropertyBindingResult bindingResultUser = new BeanPropertyBindingResult(user, "user");
+        Set<ConstraintViolation<User>> violationsUser = validator.validate(user);
+
+        for (ConstraintViolation<User> violation : violationsUser) {
+            bindingResultUser.rejectValue(
+                    violation.getPropertyPath().toString(),
+                    violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
+                    violation.getMessage()
+            );
+        }
+
+        userController.addUser(user, bindingResultUser);
 
         BeanPropertyBindingResult bindingResult1 = new BeanPropertyBindingResult(userWithWrongEmail1, "user");
         Set<ConstraintViolation<User>> violations1 = validator.validateValue(User.class,"email","email1");
@@ -128,7 +145,7 @@ public class UsersPutTests {
             );
         }
 
-        Assertions.assertThrows(ValidationException.class, () -> userController.addUser(userWithWrongEmail1, bindingResult1));
+        Assertions.assertThrows(ValidationException.class, () -> userController.updateUser(userWithWrongEmail1, bindingResult1));
 
         BeanPropertyBindingResult bindingResult2 = new BeanPropertyBindingResult(userWithWrongEmail2, "user");
         Set<ConstraintViolation<User>> violations2 = validator.validateValue(User.class,"email","email2@");
@@ -141,7 +158,7 @@ public class UsersPutTests {
             );
         }
 
-        Assertions.assertThrows(ValidationException.class, () -> userController.addUser(userWithWrongEmail2, bindingResult2));
+        Assertions.assertThrows(ValidationException.class, () -> userController.updateUser(userWithWrongEmail2, bindingResult2));
 
         BeanPropertyBindingResult bindingResult3 = new BeanPropertyBindingResult(userWithWrongEmail3, "user");
         Set<ConstraintViolation<User>> violations3 = validator.validateValue(User.class,"email","@ya.ru");
@@ -154,7 +171,7 @@ public class UsersPutTests {
             );
         }
 
-        Assertions.assertThrows(ValidationException.class, () -> userController.addUser(userWithWrongEmail3, bindingResult3));
+        Assertions.assertThrows(ValidationException.class, () -> userController.updateUser(userWithWrongEmail3, bindingResult3));
 
         BeanPropertyBindingResult bindingResult4 = new BeanPropertyBindingResult(userWithWrongEmail4, "user");
         Set<ConstraintViolation<User>> violations4 = validator.validateValue(User.class,"email","email4@@ya.ru");
@@ -167,7 +184,7 @@ public class UsersPutTests {
             );
         }
 
-        Assertions.assertThrows(ValidationException.class, () -> userController.addUser(userWithWrongEmail4, bindingResult4));
+        Assertions.assertThrows(ValidationException.class, () -> userController.updateUser(userWithWrongEmail4, bindingResult4));
     }
 
     @Test
@@ -175,6 +192,7 @@ public class UsersPutTests {
         User user = User.builder()
                 .id(1L)
                 .email("email@ya.ru")
+                .login("Login")
                 .name("Name")
                 .birthday(LocalDate.of(1989, 12, 12))
                 .build();
@@ -186,7 +204,18 @@ public class UsersPutTests {
                 .birthday(LocalDate.of(1988, 11, 11))
                 .build();
 
-        userController.getUsers().put(user.getId(), user);
+        BeanPropertyBindingResult bindingResultUser = new BeanPropertyBindingResult(user, "user");
+        Set<ConstraintViolation<User>> violationsUser = validator.validate(user);
+
+        for (ConstraintViolation<User> violation : violationsUser) {
+            bindingResultUser.rejectValue(
+                    violation.getPropertyPath().toString(),
+                    violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
+                    violation.getMessage()
+            );
+        }
+
+        userController.addUser(user, bindingResultUser);
 
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(updateToUser, "user");
         Set<ConstraintViolation<User>> violations = validator.validateValue(User.class,"login",null);
@@ -199,7 +228,72 @@ public class UsersPutTests {
             );
         }
 
-        Assertions.assertThrows(ValidationException.class, () -> userController.addUser(user, bindingResult));
+        Assertions.assertThrows(ValidationException.class, () -> userController.updateUser(user, bindingResult));
+    }
+
+    @Test
+    void testUpdateUserByUserWithSpaceSignsInLogin() {
+        User user = User.builder()
+                .id(1L)
+                .email("email@ya.ru")
+                .login("Login")
+                .name("Name")
+                .birthday(LocalDate.of(1989, 12, 12))
+                .build();
+
+        User updateToUser1 = User.builder()
+                .id(1L)
+                .email("email2@ya.ru")
+                .login("L ogin")
+                .name("Name2")
+                .birthday(LocalDate.of(1988, 11, 11))
+                .build();
+
+        User updateToUser2 = User.builder()
+                .id(1L)
+                .email("email2@ya.ru")
+                .login("L og in")
+                .name("Name2")
+                .birthday(LocalDate.of(1988, 11, 11))
+                .build();
+
+        BeanPropertyBindingResult bindingResultUser = new BeanPropertyBindingResult(user, "user");
+        Set<ConstraintViolation<User>> violationsUser = validator.validate(user);
+
+        for (ConstraintViolation<User> violation : violationsUser) {
+            bindingResultUser.rejectValue(
+                    violation.getPropertyPath().toString(),
+                    violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
+                    violation.getMessage()
+            );
+        }
+
+        userController.addUser(user, bindingResultUser);
+
+        BeanPropertyBindingResult bindingResult1 = new BeanPropertyBindingResult(updateToUser1, "user");
+        Set<ConstraintViolation<User>> violations1 = validator.validateValue(User.class,"login","L ogin");
+
+        for (ConstraintViolation<User> violation : violations1) {
+            bindingResult1.rejectValue(
+                    violation.getPropertyPath().toString(),
+                    violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
+                    violation.getMessage()
+            );
+        }
+
+        BeanPropertyBindingResult bindingResult2 = new BeanPropertyBindingResult(updateToUser2, "user");
+        Set<ConstraintViolation<User>> violations2 = validator.validateValue(User.class,"login","L og in");
+
+        for (ConstraintViolation<User> violation : violations2) {
+            bindingResult2.rejectValue(
+                    violation.getPropertyPath().toString(),
+                    violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
+                    violation.getMessage()
+            );
+        }
+
+        Assertions.assertThrows(ValidationException.class, () -> userController.updateUser(user, bindingResult1));
+        Assertions.assertThrows(ValidationException.class, () -> userController.updateUser(user, bindingResult2));
     }
 
     @Test
@@ -227,7 +321,18 @@ public class UsersPutTests {
                 .birthday(LocalDate.of(1988, 11, 11))
                 .build();
 
-        userController.getUsers().put(user.getId(), user);
+        BeanPropertyBindingResult bindingResultUser = new BeanPropertyBindingResult(user, "user");
+        Set<ConstraintViolation<User>> violationsUser = validator.validate(user);
+
+        for (ConstraintViolation<User> violation : violationsUser) {
+            bindingResultUser.rejectValue(
+                    violation.getPropertyPath().toString(),
+                    violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
+                    violation.getMessage()
+            );
+        }
+
+        userController.addUser(user, bindingResultUser);
 
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(updateToUser, "user");
         Set<ConstraintViolation<User>> violations = validator.validate(updateToUser);
@@ -263,7 +368,18 @@ public class UsersPutTests {
                 .birthday(LocalDate.now())
                 .build();
 
-        userController.getUsers().put(user.getId(), user);
+        BeanPropertyBindingResult bindingResultUser = new BeanPropertyBindingResult(user, "user");
+        Set<ConstraintViolation<User>> violationsUser = validator.validate(user);
+
+        for (ConstraintViolation<User> violation : violationsUser) {
+            bindingResultUser.rejectValue(
+                    violation.getPropertyPath().toString(),
+                    violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
+                    violation.getMessage()
+            );
+        }
+
+        userController.addUser(user, bindingResultUser);
 
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(updateToUser, "user");
         Set<ConstraintViolation<User>> violations = validator.validate(updateToUser);
@@ -276,7 +392,7 @@ public class UsersPutTests {
             );
         }
 
-        User updatedUser = userController.addUser(updateToUser, bindingResult);
+        User updatedUser = userController.updateUser(updateToUser, bindingResult);
 
         Assertions.assertEquals(updateToUser, updatedUser);
     }
@@ -299,7 +415,18 @@ public class UsersPutTests {
                 .birthday(LocalDate.now().plusDays(1))
                 .build();
 
-        userController.getUsers().put(user.getId(), user);
+        BeanPropertyBindingResult bindingResultUser = new BeanPropertyBindingResult(user, "user");
+        Set<ConstraintViolation<User>> violationsUser = validator.validate(user);
+
+        for (ConstraintViolation<User> violation : violationsUser) {
+            bindingResultUser.rejectValue(
+                    violation.getPropertyPath().toString(),
+                    violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
+                    violation.getMessage()
+            );
+        }
+
+        userController.addUser(user, bindingResultUser);
 
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(updateToUser, "user");
         Set<ConstraintViolation<User>> violations = validator.validateValue(User.class,"birthday",
@@ -313,6 +440,6 @@ public class UsersPutTests {
             );
         }
 
-        Assertions.assertThrows(ValidationException.class, () -> userController.addUser(updateToUser, bindingResult));
+        Assertions.assertThrows(ValidationException.class, () -> userController.updateUser(updateToUser, bindingResult));
     }
 }

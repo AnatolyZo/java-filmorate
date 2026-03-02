@@ -1,11 +1,14 @@
 package ru.yandex.practicum.filmorate;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.validation.BeanPropertyBindingResult;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -13,11 +16,11 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
-@SpringBootTest
 public class UsersGetTests {
-    @Autowired
     private UserController userController;
+    private Validator validator;
 
     @AfterEach
     void afterEach() {
@@ -27,6 +30,8 @@ public class UsersGetTests {
     @BeforeEach
     void setUp() {
         userController = new UserController();
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        validator = factory.getValidator();
     }
 
     @Test
@@ -67,9 +72,43 @@ public class UsersGetTests {
         expectedMap.put(user2.getId(), user2);
         expectedMap.put(user3.getId(), user3);
 
-        userController.getUsers().put(user1.getId(), user1);
-        userController.getUsers().put(user2.getId(), user2);
-        userController.getUsers().put(user3.getId(), user3);
+        BeanPropertyBindingResult bindingResult1 = new BeanPropertyBindingResult(user1, "user");
+        Set<ConstraintViolation<User>> violations1 = validator.validate(user1);
+
+        for (ConstraintViolation<User> violation : violations1) {
+            bindingResult1.rejectValue(
+                    violation.getPropertyPath().toString(),
+                    violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
+                    violation.getMessage()
+            );
+        }
+
+        userController.addUser(user1, bindingResult1);
+
+        BeanPropertyBindingResult bindingResult2 = new BeanPropertyBindingResult(user2, "user");
+        Set<ConstraintViolation<User>> violations2 = validator.validate(user2);
+
+        for (ConstraintViolation<User> violation : violations2) {
+            bindingResult2.rejectValue(
+                    violation.getPropertyPath().toString(),
+                    violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
+                    violation.getMessage()
+            );
+        }
+
+        userController.addUser(user2, bindingResult2);
+
+        BeanPropertyBindingResult bindingResult3 = new BeanPropertyBindingResult(user3, "user");
+        Set<ConstraintViolation<User>> violations3 = validator.validate(user3);
+
+        for (ConstraintViolation<User> violation : violations3) {
+            bindingResult3.rejectValue(
+                    violation.getPropertyPath().toString(),
+                    violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
+                    violation.getMessage()
+            );
+        }
+        userController.addUser(user3, bindingResult3);
 
         Collection<User> users = userController.findAllUsers();
 

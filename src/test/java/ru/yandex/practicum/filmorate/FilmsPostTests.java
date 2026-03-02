@@ -8,8 +8,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.validation.BeanPropertyBindingResult;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
@@ -20,11 +18,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-@SpringBootTest
 public class FilmsPostTests {
-    @Autowired
     private FilmController filmController;
-
     private Validator validator;
 
     @AfterEach

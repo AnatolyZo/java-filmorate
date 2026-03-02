@@ -8,8 +8,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.validation.BeanPropertyBindingResult;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
@@ -20,11 +18,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-@SpringBootTest
 public class UsersPostTests {
-    @Autowired
     private UserController userController;
-
     private Validator validator;
 
     @AfterEach
@@ -249,6 +244,50 @@ public class UsersPostTests {
         }
 
         Assertions.assertThrows(ValidationException.class, () -> userController.addUser(user, bindingResult));
+    }
+
+    @Test
+    void testAddUserWithSpaceSignsInLogin() {
+        User user1 = User.builder()
+                .id(1L)
+                .email("email@ya.ru")
+                .login("L ogin")
+                .name("Name")
+                .birthday(LocalDate.of(1989, 12, 12))
+                .build();
+
+        User user2 = User.builder()
+                .id(1L)
+                .email("email@ya.ru")
+                .login("L og in")
+                .name("Name")
+                .birthday(LocalDate.of(1989, 12, 12))
+                .build();
+
+        BeanPropertyBindingResult bindingResult1 = new BeanPropertyBindingResult(user1, "user");
+        Set<ConstraintViolation<User>> violations1 = validator.validateValue(User.class,"login","L ogin");
+
+        for (ConstraintViolation<User> violation : violations1) {
+            bindingResult1.rejectValue(
+                    violation.getPropertyPath().toString(),
+                    violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
+                    violation.getMessage()
+            );
+        }
+
+        BeanPropertyBindingResult bindingResult2 = new BeanPropertyBindingResult(user1, "user");
+        Set<ConstraintViolation<User>> violations2 = validator.validateValue(User.class,"login","L og in");
+
+        for (ConstraintViolation<User> violation : violations2) {
+            bindingResult2.rejectValue(
+                    violation.getPropertyPath().toString(),
+                    violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
+                    violation.getMessage()
+            );
+        }
+
+        Assertions.assertThrows(ValidationException.class, () -> userController.addUser(user1, bindingResult1));
+        Assertions.assertThrows(ValidationException.class, () -> userController.addUser(user2, bindingResult2));
     }
 
     @Test
