@@ -73,7 +73,7 @@ public class FilmsPutTests {
     void testUpdateFilmWithEmptyName() {
         Film film = Film.builder()
                 .id(1L)
-                .description("Описание фильма 1")
+                .description("Описание фильма")
                 .releaseDate(LocalDate.of(1989, 12, 12))
                 .duration(100)
                 .build();
