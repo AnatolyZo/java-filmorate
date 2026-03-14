@@ -12,6 +12,9 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -20,16 +23,19 @@ import java.util.Set;
 
 public class FilmsPostTests {
     private FilmController filmController;
+    private InMemoryFilmStorage inMemoryFilmStorage = new InMemoryFilmStorage();
+    private InMemoryUserStorage inMemoryUserStorage = new InMemoryUserStorage();
+    private FilmService filmService = new FilmService(inMemoryFilmStorage, inMemoryUserStorage);
     private Validator validator;
 
     @AfterEach
     void afterEach() {
-        filmController.getFilms().clear();
+        inMemoryFilmStorage.getFilms().clear();
     }
 
     @BeforeEach
     void setUp() {
-        filmController = new FilmController();
+        filmController = new FilmController(inMemoryFilmStorage, filmService);
 
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
@@ -133,7 +139,7 @@ public class FilmsPostTests {
         Assertions.assertEquals(film1, addedFilm1);
         Assertions.assertEquals(film2, addedFilm2);
         Assertions.assertEquals(film3, addedFilm3);
-        Assertions.assertIterableEquals(expectedMap.values(), filmController.getFilms().values());
+        Assertions.assertIterableEquals(expectedMap.values(), inMemoryFilmStorage.getFilms().values());
     }
 
     @Test

@@ -11,6 +11,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.validation.BeanPropertyBindingResult;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -20,16 +23,19 @@ import java.util.Set;
 
 class FilmsGetTests {
     private FilmController filmController;
+    private InMemoryFilmStorage inMemoryFilmStorage = new InMemoryFilmStorage();
+    private InMemoryUserStorage inMemoryUserStorage = new InMemoryUserStorage();
+    private FilmService filmService = new FilmService(inMemoryFilmStorage, inMemoryUserStorage);
     private Validator validator;
 
     @AfterEach
     void afterEach() {
-        filmController.getFilms().clear();
+        inMemoryFilmStorage.getFilms().clear();
     }
 
     @BeforeEach
     void setUp() {
-        filmController = new FilmController();
+        filmController = new FilmController(inMemoryFilmStorage, filmService);
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
     }

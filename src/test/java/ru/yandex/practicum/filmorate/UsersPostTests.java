@@ -12,6 +12,8 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -20,16 +22,18 @@ import java.util.Set;
 
 public class UsersPostTests {
     private UserController userController;
+    private InMemoryUserStorage inMemoryUserStorage = new InMemoryUserStorage();
+    private UserService userService = new UserService(inMemoryUserStorage);
     private Validator validator;
 
     @AfterEach
     void afterEach() {
-        userController.getUsers().clear();
+        inMemoryUserStorage.getUsers().clear();
     }
 
     @BeforeEach
     void setUp() {
-        userController = new UserController();
+        userController = new UserController(inMemoryUserStorage, userService);
 
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
@@ -133,7 +137,7 @@ public class UsersPostTests {
         Assertions.assertEquals(user1, addedUser1);
         Assertions.assertEquals(user2, addedUser2);
         Assertions.assertEquals(user3, addedUser3);
-        Assertions.assertIterableEquals(expectedMap.values(), userController.getUsers().values());
+        Assertions.assertIterableEquals(expectedMap.values(), inMemoryUserStorage.getUsers().values());
     }
 
     @Test

@@ -12,22 +12,28 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 
 import java.time.LocalDate;
 import java.util.Set;
 
 public class FilmsPutTests {
     private FilmController filmController;
+    private InMemoryFilmStorage inMemoryFilmStorage = new InMemoryFilmStorage();
+    private InMemoryUserStorage inMemoryUserStorage = new InMemoryUserStorage();
+    private FilmService filmService = new FilmService(inMemoryFilmStorage, inMemoryUserStorage);
     private Validator validator;
 
     @AfterEach
     void afterEach() {
-        filmController.getFilms().clear();
+        inMemoryFilmStorage.getFilms().clear();
     }
 
     @BeforeEach
     void setUp() {
-        filmController = new FilmController();
+        filmController = new FilmController(inMemoryFilmStorage, filmService);
 
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
@@ -51,7 +57,7 @@ public class FilmsPutTests {
                 .duration(101)
                 .build();
 
-        filmController.getFilms().put(film.getId(), film);
+        inMemoryFilmStorage.getFilms().put(film.getId(), film);
 
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(updateToFilm, "film");
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
@@ -85,7 +91,7 @@ public class FilmsPutTests {
                 .duration(101)
                 .build();
 
-        filmController.getFilms().put(film.getId(), film);
+        inMemoryFilmStorage.getFilms().put(film.getId(), film);
 
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(updateToFilm, "film");
         Set<ConstraintViolation<Film>> violations = validator.validateValue(Film.class, "name", null);
