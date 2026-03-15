@@ -6,7 +6,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.*;
 
@@ -14,22 +14,22 @@ import java.util.*;
 @RequestMapping("/users")
 @RequiredArgsConstructor
 public class UserController {
-    private final InMemoryUserStorage inMemoryUserStorage;
+    private final UserStorage userStorage;
     private final UserService userService;
 
     @GetMapping
     public Collection<User> findAllUsers() {
-        return inMemoryUserStorage.findAllUsers();
+        return userStorage.findAllUsers();
     }
 
     @PostMapping
     public User addUser(@Valid @RequestBody User user, BindingResult bindingResult) {
-        return inMemoryUserStorage.addUser(user, bindingResult);
+        return userStorage.addUser(user, bindingResult);
     }
 
     @PutMapping
     public User updateUser(@Valid @RequestBody User newUser, BindingResult bindingResult) {
-        return inMemoryUserStorage.updateUser(newUser, bindingResult);
+        return userStorage.updateUser(newUser, bindingResult);
     }
 
     @PutMapping("/{id}/friends/{friendId}")

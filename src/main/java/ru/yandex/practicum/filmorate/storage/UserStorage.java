@@ -11,4 +11,8 @@ public interface UserStorage {
     User addUser(User user, BindingResult bindingResult);
 
     User updateUser(User newUser, BindingResult bindingResult);
+
+    User getUser(long userId);
+
+    void validateId(long userId);
 }

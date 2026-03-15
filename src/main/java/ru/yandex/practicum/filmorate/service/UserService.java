@@ -4,8 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
-import ru.yandex.practicum.filmorate.validation.validators.IdValidator;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.List;
 import java.util.Set;
@@ -14,13 +13,13 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class UserService {
-    private final InMemoryUserStorage inMemoryUserStorage;
+    private final UserStorage userStorage;
 
     public User addFriend(long userId, long friendId) {
-        IdValidator.validate(inMemoryUserStorage, userId);
-        IdValidator.validate(inMemoryUserStorage, friendId);
-        User user = inMemoryUserStorage.getUser(userId);
-        User friend = inMemoryUserStorage.getUser(friendId);
+        userStorage.validateId(userId);
+        userStorage.validateId(friendId);
+        User user = userStorage.getUser(userId);
+        User friend = userStorage.getUser(friendId);
 
         user.setNewFriend(friendId);
         friend.setNewFriend(userId);
@@ -29,10 +28,10 @@ public class UserService {
     }
 
     public User deleteFriend(long userId, long friendId) {
-        IdValidator.validate(inMemoryUserStorage, userId);
-        IdValidator.validate(inMemoryUserStorage, friendId);
-        User user = inMemoryUserStorage.getUser(userId);
-        User friend = inMemoryUserStorage.getUser(friendId);
+        userStorage.validateId(userId);
+        userStorage.validateId(friendId);
+        User user = userStorage.getUser(userId);
+        User friend = userStorage.getUser(friendId);
 
         user.deleteFriend(friendId);
         friend.deleteFriend(userId);
@@ -41,25 +40,25 @@ public class UserService {
     }
 
     public List<User> showFriends(long userId) {
-        IdValidator.validate(inMemoryUserStorage, userId);
-        User user = inMemoryUserStorage.getUser(userId);
+        userStorage.validateId(userId);
+        User user = userStorage.getUser(userId);
 
         return user.getFriends().stream()
-                .map(inMemoryUserStorage::getUser)
+                .map(userStorage::getUser)
                 .toList();
     }
 
     public List<User> showCommonFriends(long userId, long otherId) {
-        IdValidator.validate(inMemoryUserStorage, userId);
-        IdValidator.validate(inMemoryUserStorage, otherId);
-        User user = inMemoryUserStorage.getUser(userId);
-        User otherUser = inMemoryUserStorage.getUser(otherId);
+        userStorage.validateId(userId);
+        userStorage.validateId(otherId);
+        User user = userStorage.getUser(userId);
+        User otherUser = userStorage.getUser(otherId);
 
         Set<Long> usersFriends = user.getFriends();
         Set<Long> otherUsersFriends = otherUser.getFriends();
         return usersFriends.stream()
                 .filter(otherUsersFriends::contains)
-                .map(inMemoryUserStorage::getUser)
+                .map(userStorage::getUser)
                 .toList();
     }
 }

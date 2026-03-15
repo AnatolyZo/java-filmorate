@@ -70,6 +70,19 @@ public class InMemoryUserStorage implements UserStorage {
         throw new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден");
     }
 
+    @Override
+    public User getUser(long userId) {
+        return users.get(userId);
+    }
+
+    @Override
+    public void validateId(long userId) {
+        if (users.get(userId) == null) {
+            log.info("Пользователь с id {} не найден", userId);
+            throw new NotFoundException(String.format("Пользователь с id %d не найден", userId));
+        }
+    }
+
     //Метод по обновлению полей
     private void updateFields(User updatingUser, User newUser) {
         updatingUser.setEmail(newUser.getEmail());
@@ -98,9 +111,5 @@ public class InMemoryUserStorage implements UserStorage {
             user.setName(user.getLogin());
             log.debug("У пользователя с id {} заполнено пустое имя на {}", user.getName(), user.getLogin());
         }
-    }
-
-    public User getUser(long userId) {
-        return users.get(userId);
     }
 }

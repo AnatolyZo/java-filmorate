@@ -66,6 +66,26 @@ public class InMemoryFilmStorage implements FilmStorage {
         throw new NotFoundException("Фильм с id = " + newFilm.getId() + " не найден");
     }
 
+    @Override
+    public Film getFilm(long filmId) {
+        return films.get(filmId);
+    }
+
+    //Сортировка фильмов с количеством лайков от большего к меньшему
+    @Override
+    public List<Film> sortFilms() {
+        return films.values().stream()
+                .sorted(Comparator.comparing(Film::countLikes).reversed())
+                .toList();
+    }
+
+    @Override
+    public void validateId(long filmId) {
+        if (films.get(filmId) == null) {
+            log.info("Фильм c id {} не найден", filmId);
+            throw new NotFoundException(String.format("Фильм c id %d не найден", filmId));
+        }
+    }
     //Метод по обновлению полей
     private void updateFields(Film updatingFilm, Film newFilm) {
         updatingFilm.setName(newFilm.getName());
@@ -86,16 +106,5 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .max()
                 .orElse(0);
         return ++currentMaxId;
-    }
-
-    public Film getFilm(long filmId) {
-        return films.get(filmId);
-    }
-
-    //Сортировка фильмов с количеством лайков от большего к меньшему
-    public List<Film> sortFilms() {
-        return films.values().stream()
-                .sorted(Comparator.comparing(Film::countLikes).reversed())
-                .toList();
     }
 }
