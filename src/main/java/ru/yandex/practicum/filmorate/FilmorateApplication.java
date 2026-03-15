@@ -13,5 +13,4 @@ public class FilmorateApplication {
         ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME))
                 .setLevel(Level.INFO);
 	}
-
 }

@@ -12,22 +12,26 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 
 import java.time.LocalDate;
 import java.util.Set;
 
 public class UsersPutTests {
     private UserController userController;
+    private InMemoryUserStorage inMemoryUserStorage = new InMemoryUserStorage();
+    private UserService userService = new UserService(inMemoryUserStorage);
     private Validator validator;
 
     @AfterEach
     void afterEach() {
-        userController.getUsers().clear();
+        inMemoryUserStorage.getUsers().clear();
     }
 
     @BeforeEach
     void setUp() {
-        userController = new UserController();
+        userController = new UserController(inMemoryUserStorage, userService);
 
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();

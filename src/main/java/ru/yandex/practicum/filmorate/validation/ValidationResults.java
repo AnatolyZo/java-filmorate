@@ -1,16 +1,14 @@
 package ru.yandex.practicum.filmorate.validation;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.BindingResult;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class ValidationResults {
-    private static final Logger log = LoggerFactory.getLogger(ValidationResults.class);
-
     //Метод выводит все ошибки в запросе
     public static void extract(BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
