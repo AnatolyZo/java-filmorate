@@ -86,6 +86,7 @@ public class InMemoryFilmStorage implements FilmStorage {
             throw new NotFoundException(String.format("Фильм c id %d не найден", filmId));
         }
     }
+
     //Метод по обновлению полей
     private void updateFields(Film updatingFilm, Film newFilm) {
         updatingFilm.setName(newFilm.getName());
