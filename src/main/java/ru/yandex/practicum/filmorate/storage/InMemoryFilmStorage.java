@@ -71,14 +71,6 @@ public class InMemoryFilmStorage implements FilmStorage {
         return films.get(filmId);
     }
 
-    //Сортировка фильмов с количеством лайков от большего к меньшему
-    @Override
-    public List<Film> sortFilms() {
-        return films.values().stream()
-                .sorted(Comparator.comparing(Film::countLikes).reversed())
-                .toList();
-    }
-
     @Override
     public void validateId(long filmId) {
         if (films.get(filmId) == null) {

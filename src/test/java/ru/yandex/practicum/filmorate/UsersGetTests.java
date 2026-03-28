@@ -22,8 +22,8 @@ import java.util.Set;
 
 public class UsersGetTests {
     private UserController userController;
-    private InMemoryUserStorage inMemoryUserStorage = new InMemoryUserStorage();
-    private UserService userService = new UserService(inMemoryUserStorage);
+    private final InMemoryUserStorage inMemoryUserStorage = new InMemoryUserStorage();
+    private final UserService userService = new UserService(inMemoryUserStorage);
     private Validator validator;
 
     @AfterEach

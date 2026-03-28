@@ -4,59 +4,88 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.UsersFriends;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import java.util.Optional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserStorage userStorage;
+    private final List<UsersFriends> usersFriends = new ArrayList<>();
 
     public User addFriend(long userId, long friendId) {
         userStorage.validateId(userId);
         userStorage.validateId(friendId);
-        User user = userStorage.getUser(userId);
-        User friend = userStorage.getUser(friendId);
 
-        user.setNewFriend(friendId);
-        friend.setNewFriend(userId);
+        //Находим пользователя, который подавал заявку в друзья ранее
+        Optional<UsersFriends> potentialFriendPair = usersFriends.stream()
+                .filter(pair -> pair.getUserId() == friendId && pair.getFriendId() == userId)
+                .findFirst();
+
+        //В случае если пользователь с friendId подавал заявку, то добавляем в друзья и обновляем статус подтверждения
+        if (potentialFriendPair.isPresent()) {
+            usersFriends.add(new UsersFriends(userId, friendId, true));
+            potentialFriendPair.get().setConfirmedFriend(true);
+        } else {
+            usersFriends.add(new UsersFriends(userId, friendId, false));
+        }
+
         log.debug("Пользоатель с id {} добавил в друзья пользователя с id {}", userId, friendId);
-        return user;
+        return userStorage.getUser(userId);
     }
 
     public User deleteFriend(long userId, long friendId) {
         userStorage.validateId(userId);
         userStorage.validateId(friendId);
-        User user = userStorage.getUser(userId);
-        User friend = userStorage.getUser(friendId);
 
-        user.deleteFriend(friendId);
-        friend.deleteFriend(userId);
+        //Если была подтверждена дружба с другим пользователем, то убираем подтверждение
+        usersFriends.stream()
+                .filter(pair -> pair.getUserId() == friendId && pair.getFriendId() == userId)
+                .findFirst()
+                .ifPresent(friend -> friend.setConfirmedFriend(false));
+
+        //Удаляем друга из списка
+        usersFriends.stream()
+                .filter(pair -> pair.getUserId() == userId && pair.getFriendId() == friendId)
+                .findFirst()
+                .ifPresent(usersFriends::remove);
+
         log.debug("Пользоатель с id {} удалил из друзей пользователя с id {}", userId, friendId);
-        return friend;
+        return userStorage.getUser(friendId);
     }
 
     public List<User> showFriends(long userId) {
         userStorage.validateId(userId);
-        User user = userStorage.getUser(userId);
 
-        return user.getFriends().stream()
-                .map(userStorage::getUser)
+        return usersFriends.stream()
+                .filter(pair -> pair.getUserId() == userId && pair.isConfirmedFriend())
+                .map(pair -> userStorage.getUser(pair.getFriendId()))
                 .toList();
     }
 
     public List<User> showCommonFriends(long userId, long otherId) {
         userStorage.validateId(userId);
         userStorage.validateId(otherId);
-        User user = userStorage.getUser(userId);
-        User otherUser = userStorage.getUser(otherId);
 
-        Set<Long> usersFriends = user.getFriends();
-        Set<Long> otherUsersFriends = otherUser.getFriends();
-        return usersFriends.stream()
+        //Получаем список подтвержденных друзей у пользователя
+        List<Long> usersFriendsList = usersFriends.stream()
+                .filter(pair -> pair.getUserId() == userId && pair.isConfirmedFriend())
+                .map(UsersFriends::getFriendId)
+                .toList();
+
+        //Получаем список подтвержденных друзей у другого пользователя
+        List<Long> otherUsersFriends = usersFriends.stream()
+                .filter(pair -> pair.getUserId() == otherId && pair.isConfirmedFriend())
+                .map(UsersFriends::getFriendId)
+                .toList();
+
+        //Выводим список общих подтвержденных друзей
+        return usersFriendsList.stream()
                 .filter(otherUsersFriends::contains)
                 .map(userStorage::getUser)
                 .toList();
