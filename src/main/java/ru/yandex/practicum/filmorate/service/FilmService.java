@@ -48,7 +48,7 @@ public class FilmService {
         Map<Long, Integer> filmsLikesMap = filmLikesList.stream()
                 .collect(Collectors.toMap(
                         FilmLikes::getFilmId,
-                        element-> 1,
+                        element -> 1,
                         (existingValue, newValue) -> existingValue + 1
                 ));
 
