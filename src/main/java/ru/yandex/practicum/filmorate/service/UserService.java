@@ -18,11 +18,17 @@ public class UserService {
     public User addFriend(long userId, long friendId) {
         userStorage.validateId(userId);
         userStorage.validateId(friendId);
+
         User user = userStorage.getUser(userId);
         User friend = userStorage.getUser(friendId);
 
-        user.setNewFriend(friendId);
-        friend.setNewFriend(userId);
+        if (friend.checkFriendExist(userId)) {
+            user.setNewFriend(friendId, true);
+            friend.setNewFriend(userId, true);
+        } else {
+            user.setNewFriend(friendId, false);
+        }
+
         log.debug("Пользоатель с id {} добавил в друзья пользователя с id {}", userId, friendId);
         return user;
     }
@@ -33,8 +39,11 @@ public class UserService {
         User user = userStorage.getUser(userId);
         User friend = userStorage.getUser(friendId);
 
+        if (friend.checkFriendExist(userId)) {
+            friend.setNewFriend(userId, false);
+        }
+
         user.deleteFriend(friendId);
-        friend.deleteFriend(userId);
         log.debug("Пользоатель с id {} удалил из друзей пользователя с id {}", userId, friendId);
         return friend;
     }
