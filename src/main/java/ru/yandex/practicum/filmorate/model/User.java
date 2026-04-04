@@ -26,9 +26,9 @@ public class User {
     private String name;
     @IsDateBefore
     private LocalDate birthday;
-    private final Map<Long, Boolean> friends = new HashMap<>();
+    private final Map<Long, FriendshipStatus> friends = new HashMap<>();
 
-    public void setNewFriend(Long friendId, boolean friendshipStatus) {
+    public void setNewFriend(Long friendId, FriendshipStatus friendshipStatus) {
         friends.put(friendId, friendshipStatus);
     }
 

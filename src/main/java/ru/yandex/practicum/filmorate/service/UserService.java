@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -23,10 +24,10 @@ public class UserService {
         User friend = userStorage.getUser(friendId);
 
         if (friend.checkFriendExist(userId)) {
-            user.setNewFriend(friendId, true);
-            friend.setNewFriend(userId, true);
+            user.setNewFriend(friendId, FriendshipStatus.CONFIRMED);
+            friend.setNewFriend(userId, FriendshipStatus.CONFIRMED);
         } else {
-            user.setNewFriend(friendId, false);
+            user.setNewFriend(friendId, FriendshipStatus.NOT_CONFIRMED);
         }
 
         log.debug("Пользоатель с id {} добавил в друзья пользователя с id {}", userId, friendId);
@@ -40,7 +41,7 @@ public class UserService {
         User friend = userStorage.getUser(friendId);
 
         if (friend.checkFriendExist(userId)) {
-            friend.setNewFriend(userId, false);
+            friend.setNewFriend(userId, FriendshipStatus.NOT_CONFIRMED);
         }
 
         user.deleteFriend(friendId);
