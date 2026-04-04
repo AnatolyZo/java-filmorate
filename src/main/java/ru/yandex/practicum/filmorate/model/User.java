@@ -9,7 +9,8 @@ import ru.yandex.practicum.filmorate.validation.annotations.IsContainsSpaceSigns
 import ru.yandex.practicum.filmorate.validation.annotations.IsDateBefore;
 
 import java.time.LocalDate;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 @Data
@@ -25,13 +26,21 @@ public class User {
     private String name;
     @IsDateBefore
     private LocalDate birthday;
-    private final Set<Long> friends = new HashSet<>();
+    private final Map<Long, FriendshipStatus> friends = new HashMap<>();
 
-    public void setNewFriend(Long friendId) {
-        friends.add(friendId);
+    public void setNewFriend(Long friendId, FriendshipStatus friendshipStatus) {
+        friends.put(friendId, friendshipStatus);
     }
 
     public void deleteFriend(Long friendId) {
         friends.remove(friendId);
+    }
+
+    public boolean checkFriendExist(Long userId) {
+        return friends.containsKey(userId);
+    }
+
+    public Set<Long> getFriends() {
+        return friends.keySet();
     }
 }
