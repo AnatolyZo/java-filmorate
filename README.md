@@ -4,30 +4,46 @@ Template repository for Filmorate project.
 # Основные запросы к базе данных
 ## Получение всех фильмов
 ```sql
-SELECT film_id,
-       name,
-       description,
-       releaseDate,
-       duration,
-       mpa_rating
-FROM films;
+SELECT
+     f.film_id
+     f.name
+     f.description
+     f.release_date
+     f.duration
+     r.rating_id AS mpa_id
+     r.rating AS mpa_name
+     GROUP_CONCAT(CONCAT(g.genre_id, ' ', g.genre) ORDER BY g.genre_id SEPARATOR ', ') AS genre_list
+FROM films f
+JOIN ratings AS r ON f.rating_id = r.rating_id
+LEFT JOIN films_genres fg ON f.film_id = fg.film_id
+LEFT JOIN genres g ON fg.genre_id = g.genre_id
+GROUP BY f.film_id, f.name, f.description, f.release_date, f.duration, f.rating_id;
 ```
 
-## Получение 10 наиболее популярных фильмов
+## Получение N наиболее популярных фильмов
 ```sql
-SELECT film_id,
-       name,
-       description,
-       releaseDate,
-       duration,
-       mpa_rating
-FROM films 
-WHERE film_id IN (
-      SELECT film_id
-      FROM film_likes
-      GROUP BY film_id
-      ORDER BY COUNT(user_id) DESC
-      LIMIT 10);
+SELECT
+    f.film_id
+    f.name
+    f.description
+    f.release_date
+    f.duration
+    r.rating_id AS mpa_id
+    r.rating AS mpa_name
+    GROUP_CONCAT(CONCAT(g.genre_id, ' ', g.genre) ORDER BY g.genre_id SEPARATOR ', ') AS genre_list
+FROM films AS f
+JOIN ratings AS r ON f.rating_id = r.rating_id
+LEFT JOIN films_genres AS fg ON f.film_id = fg.film_id
+LEFT JOIN genres AS g ON fg.genre_id = g.genre_id
+JOIN (
+   SELECT film_id,
+          COUNT(user_id) AS likes
+          FROM films_likes
+          GROUP BY film_id
+          ORDER BY likes
+          LIMIT ?) AS popular_films ON f.film_id = popular_films.film_id
+GROUP BY f.film_id, f.name, f.description, f.release_date, f.duration, f.rating_id
+ORDER BY popular_films.likes DESC;
 ```
 
 ## Получение всех пользователей
@@ -42,14 +58,10 @@ FROM users;
 
 ## Получение списка друзей пользователя
 ```sql
-SELECT user_id,
-       email,
-       login,
-       name,
-       birthday
-FROM users 
+SELECT *
+FROM users
 WHERE user_id IN (
-      SELECT friend_id,
-      FROM user_friends
-      WHERE user_id = 'заданное значение');
+    SELECT friend_id
+    FROM users_friends
+    WHERE user_id = ?);
 ```

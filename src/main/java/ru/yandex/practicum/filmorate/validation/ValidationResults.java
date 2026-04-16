@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.validation;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.BindingResult;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 
 import java.util.List;
@@ -16,7 +17,15 @@ public class ValidationResults {
                     .map(error -> "Поле: " + error.getField() + ", ошибка: " + error.getDefaultMessage())
                     .collect(Collectors.toList());
             log.info("Обнаружены следующие ошибки валидации:\n{}", String.join("\n", validationFails));
-            throw new ValidationException("Обнаружены следующие ошибки валидации:\n" + String.join("\n", validationFails));
+
+            boolean isNotFoundErrorsRevealed = bindingResult.getFieldErrors().stream()
+                    .anyMatch(error -> error.getField().equals("genres") || error.getField().equals("mpa"));
+
+            if (isNotFoundErrorsRevealed) {
+                throw new NotFoundException("Обнаружены следующие ошибки валидации:\n" + String.join("\n", validationFails));
+            } else {
+                throw new ValidationException("Обнаружены следующие ошибки валидации:\n" + String.join("\n", validationFails));
+            }
         }
     }
 }

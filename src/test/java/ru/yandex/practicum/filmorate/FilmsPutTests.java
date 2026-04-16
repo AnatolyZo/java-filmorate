@@ -10,20 +10,25 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.validation.BeanPropertyBindingResult;
 import ru.yandex.practicum.filmorate.controller.FilmController;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
+import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
+import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 public class FilmsPutTests {
     private FilmController filmController;
-    private InMemoryFilmStorage inMemoryFilmStorage = new InMemoryFilmStorage();
-    private InMemoryUserStorage inMemoryUserStorage = new InMemoryUserStorage();
-    private FilmService filmService = new FilmService(inMemoryFilmStorage, inMemoryUserStorage);
+    private final InMemoryFilmStorage inMemoryFilmStorage = new InMemoryFilmStorage();
+    private final FilmService filmService = new FilmService(inMemoryFilmStorage);
     private Validator validator;
 
     @AfterEach
@@ -33,7 +38,7 @@ public class FilmsPutTests {
 
     @BeforeEach
     void setUp() {
-        filmController = new FilmController(inMemoryFilmStorage, filmService);
+        filmController = new FilmController(filmService);
 
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
@@ -49,7 +54,15 @@ public class FilmsPutTests {
                 .duration(100)
                 .build();
 
-        Film updateToFilm = Film.builder()
+        UpdateFilmRequest updateToFilm = UpdateFilmRequest.builder()
+                .id(1L)
+                .name("Новый фильм")
+                .description("Новое описание фильма")
+                .releaseDate(LocalDate.of(1988, 11, 11))
+                .duration(101)
+                .build();
+
+        FilmDto expectedFilm = FilmDto.builder()
                 .id(1L)
                 .name("Новый фильм")
                 .description("Новое описание фильма")
@@ -60,9 +73,9 @@ public class FilmsPutTests {
         inMemoryFilmStorage.getFilms().put(film.getId(), film);
 
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(updateToFilm, "film");
-        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+        Set<ConstraintViolation<UpdateFilmRequest>> violations = validator.validate(updateToFilm);
 
-        for (ConstraintViolation<Film> violation : violations) {
+        for (ConstraintViolation<UpdateFilmRequest> violation : violations) {
             bindingResult.rejectValue(
                     violation.getPropertyPath().toString(),
                     violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
@@ -70,9 +83,9 @@ public class FilmsPutTests {
             );
         }
 
-        Film updatedFilm = filmController.updateFilm(updateToFilm, bindingResult);
+        FilmDto updatedFilm = filmController.updateFilm(updateToFilm, bindingResult);
 
-        Assertions.assertEquals(updateToFilm, updatedFilm);
+        Assertions.assertEquals(expectedFilm, updatedFilm);
     }
 
     @Test
@@ -84,7 +97,7 @@ public class FilmsPutTests {
                 .duration(100)
                 .build();
 
-        Film updateToFilm = Film.builder()
+        UpdateFilmRequest updateToFilm = UpdateFilmRequest.builder()
                 .id(1L)
                 .description("Новое описание фильма")
                 .releaseDate(LocalDate.of(1988, 11, 11))
@@ -94,9 +107,9 @@ public class FilmsPutTests {
         inMemoryFilmStorage.getFilms().put(film.getId(), film);
 
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(updateToFilm, "film");
-        Set<ConstraintViolation<Film>> violations = validator.validateValue(Film.class, "name", null);
+        Set<ConstraintViolation<UpdateFilmRequest>> violations = validator.validateValue(UpdateFilmRequest.class, "name", null);
 
-        for (ConstraintViolation<Film> violation : violations) {
+        for (ConstraintViolation<UpdateFilmRequest> violation : violations) {
             bindingResult.rejectValue(
                     violation.getPropertyPath().toString(),
                     violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
@@ -109,15 +122,26 @@ public class FilmsPutTests {
 
     @Test
     void testUpdateFilmWithDescriptionEquals200Characters() {
-        Film film = Film.builder()
-                .id(1L)
+        Mpa mpa = new Mpa();
+        mpa.setId(1);
+        mpa.setName("G");
+
+        List<Genre> genres = new ArrayList<>();
+        Genre genre = new Genre();
+        genre.setId(1);
+        genre.setName("Комедия");
+        genres.add(genre);
+
+        NewFilmRequest film = NewFilmRequest.builder()
                 .name("Фильм")
                 .description(new String((new char[200])))
                 .releaseDate(LocalDate.of(1989, 12, 12))
                 .duration(100)
+                .mpa(mpa)
+                .genres(genres)
                 .build();
 
-        Film updateToFilm = Film.builder()
+        UpdateFilmRequest updateToFilm = UpdateFilmRequest.builder()
                 .id(1L)
                 .name("Новый фильм")
                 .description(new String(new char[200]))
@@ -125,10 +149,20 @@ public class FilmsPutTests {
                 .duration(101)
                 .build();
 
-        BeanPropertyBindingResult bindingResultFilm = new BeanPropertyBindingResult(film, "film");
-        Set<ConstraintViolation<Film>> violationsFilm = validator.validate(film);
+        FilmDto expectedFilm = FilmDto.builder()
+                .id(1L)
+                .name("Новый фильм")
+                .description(new String(new char[200]))
+                .releaseDate(LocalDate.of(1988, 11, 11))
+                .duration(101)
+                .mpa(mpa)
+                .genres(genres)
+                .build();
 
-        for (ConstraintViolation<Film> violation : violationsFilm) {
+        BeanPropertyBindingResult bindingResultFilm = new BeanPropertyBindingResult(film, "film");
+        Set<ConstraintViolation<NewFilmRequest>> violationsFilm = validator.validate(film);
+
+        for (ConstraintViolation<NewFilmRequest> violation : violationsFilm) {
             bindingResultFilm.rejectValue(
                     violation.getPropertyPath().toString(),
                     violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
@@ -139,9 +173,9 @@ public class FilmsPutTests {
         filmController.addFilm(film, bindingResultFilm);
 
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(updateToFilm, "film");
-        Set<ConstraintViolation<Film>> violations = validator.validate(updateToFilm);
+        Set<ConstraintViolation<UpdateFilmRequest>> violations = validator.validate(updateToFilm);
 
-        for (ConstraintViolation<Film> violation : violations) {
+        for (ConstraintViolation<UpdateFilmRequest> violation : violations) {
             bindingResult.rejectValue(
                     violation.getPropertyPath().toString(),
                     violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
@@ -149,22 +183,33 @@ public class FilmsPutTests {
             );
         }
 
-        Film updatedFilm = filmController.updateFilm(updateToFilm, bindingResult);
+        FilmDto updatedFilm = filmController.updateFilm(updateToFilm, bindingResult);
 
-        Assertions.assertEquals(updateToFilm, updatedFilm);
+        Assertions.assertEquals(expectedFilm, updatedFilm);
     }
 
     @Test
     void testUpdateFilmWithDescriptionEquals201Characters() {
-        Film film = Film.builder()
-                .id(1L)
+        Mpa mpa = new Mpa();
+        mpa.setId(1);
+        mpa.setName("G");
+
+        List<Genre> genres = new ArrayList<>();
+        Genre genre = new Genre();
+        genre.setId(1);
+        genre.setName("Комедия");
+        genres.add(genre);
+
+        NewFilmRequest film = NewFilmRequest.builder()
                 .name("Фильм")
                 .description("Описание фильма")
                 .releaseDate(LocalDate.of(1989, 12, 12))
                 .duration(100)
+                .mpa(mpa)
+                .genres(genres)
                 .build();
 
-        Film updateToFilm = Film.builder()
+        UpdateFilmRequest updateToFilm = UpdateFilmRequest.builder()
                 .id(1L)
                 .name("Новый фильм")
                 .description(new String(new char[201]))
@@ -173,9 +218,9 @@ public class FilmsPutTests {
                 .build();
 
         BeanPropertyBindingResult bindingResultFilm = new BeanPropertyBindingResult(film, "film");
-        Set<ConstraintViolation<Film>> violationsFilm = validator.validate(film);
+        Set<ConstraintViolation<NewFilmRequest>> violationsFilm = validator.validate(film);
 
-        for (ConstraintViolation<Film> violation : violationsFilm) {
+        for (ConstraintViolation<NewFilmRequest> violation : violationsFilm) {
             bindingResultFilm.rejectValue(
                     violation.getPropertyPath().toString(),
                     violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
@@ -186,11 +231,11 @@ public class FilmsPutTests {
         filmController.addFilm(film, bindingResultFilm);
 
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(updateToFilm, "film");
-        Set<ConstraintViolation<Film>> violations = validator.validateValue(Film.class,
+        Set<ConstraintViolation<UpdateFilmRequest>> violations = validator.validateValue(UpdateFilmRequest.class,
                 "description",
                 new String((new char[201])));
 
-        for (ConstraintViolation<Film> violation : violations) {
+        for (ConstraintViolation<UpdateFilmRequest> violation : violations) {
             bindingResult.rejectValue(
                     violation.getPropertyPath().toString(),
                     violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
@@ -203,15 +248,26 @@ public class FilmsPutTests {
 
     @Test
     void testUpdateFilmWithReleaseDateEquals28December1895() {
-        Film film = Film.builder()
-                .id(1L)
+        Mpa mpa = new Mpa();
+        mpa.setId(1);
+        mpa.setName("G");
+
+        List<Genre> genres = new ArrayList<>();
+        Genre genre = new Genre();
+        genre.setId(1);
+        genre.setName("Комедия");
+        genres.add(genre);
+
+        NewFilmRequest film = NewFilmRequest.builder()
                 .name("Фильм")
                 .description(new String((new char[200])))
                 .releaseDate(LocalDate.of(1989, 12, 12))
                 .duration(100)
+                .mpa(mpa)
+                .genres(genres)
                 .build();
 
-        Film updateToFilm = Film.builder()
+        UpdateFilmRequest updateToFilm = UpdateFilmRequest.builder()
                 .id(1L)
                 .name("Новый фильм")
                 .description("Новое описание фильма")
@@ -219,10 +275,20 @@ public class FilmsPutTests {
                 .duration(101)
                 .build();
 
-        BeanPropertyBindingResult bindingResultFilm = new BeanPropertyBindingResult(film, "film");
-        Set<ConstraintViolation<Film>> violationsFilm = validator.validate(film);
+        FilmDto expectedFilm = FilmDto.builder()
+                .id(1L)
+                .name("Новый фильм")
+                .description("Новое описание фильма")
+                .releaseDate(LocalDate.of(1895, 12, 28))
+                .duration(101)
+                .mpa(mpa)
+                .genres(genres)
+                .build();
 
-        for (ConstraintViolation<Film> violation : violationsFilm) {
+        BeanPropertyBindingResult bindingResultFilm = new BeanPropertyBindingResult(film, "film");
+        Set<ConstraintViolation<NewFilmRequest>> violationsFilm = validator.validate(film);
+
+        for (ConstraintViolation<NewFilmRequest> violation : violationsFilm) {
             bindingResultFilm.rejectValue(
                     violation.getPropertyPath().toString(),
                     violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
@@ -233,9 +299,9 @@ public class FilmsPutTests {
         filmController.addFilm(film, bindingResultFilm);
 
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(updateToFilm, "film");
-        Set<ConstraintViolation<Film>> violations = validator.validate(updateToFilm);
+        Set<ConstraintViolation<UpdateFilmRequest>> violations = validator.validate(updateToFilm);
 
-        for (ConstraintViolation<Film> violation : violations) {
+        for (ConstraintViolation<UpdateFilmRequest> violation : violations) {
             bindingResult.rejectValue(
                     violation.getPropertyPath().toString(),
                     violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
@@ -243,22 +309,33 @@ public class FilmsPutTests {
             );
         }
 
-        Film updatedFilm = filmController.updateFilm(updateToFilm, bindingResult);
+        FilmDto updatedFilm = filmController.updateFilm(updateToFilm, bindingResult);
 
-        Assertions.assertEquals(updateToFilm, updatedFilm);
+        Assertions.assertEquals(expectedFilm, updatedFilm);
     }
 
     @Test
     void testUpdateFilmWithReleaseDateEquals27December1895() {
-        Film film = Film.builder()
-                .id(1L)
+        Mpa mpa = new Mpa();
+        mpa.setId(1);
+        mpa.setName("G");
+
+        List<Genre> genres = new ArrayList<>();
+        Genre genre = new Genre();
+        genre.setId(1);
+        genre.setName("Комедия");
+        genres.add(genre);
+
+        NewFilmRequest film = NewFilmRequest.builder()
                 .name("Фильм")
                 .description(new String((new char[200])))
                 .releaseDate(LocalDate.of(1989, 12, 12))
                 .duration(100)
+                .mpa(mpa)
+                .genres(genres)
                 .build();
 
-        Film updateToFilm = Film.builder()
+        UpdateFilmRequest updateToFilm = UpdateFilmRequest.builder()
                 .id(1L)
                 .name("Новый фильм")
                 .description("Новое описание фильма")
@@ -267,9 +344,9 @@ public class FilmsPutTests {
                 .build();
 
         BeanPropertyBindingResult bindingResultFilm = new BeanPropertyBindingResult(film, "film");
-        Set<ConstraintViolation<Film>> violationsFilm = validator.validate(film);
+        Set<ConstraintViolation<NewFilmRequest>> violationsFilm = validator.validate(film);
 
-        for (ConstraintViolation<Film> violation : violationsFilm) {
+        for (ConstraintViolation<NewFilmRequest> violation : violationsFilm) {
             bindingResultFilm.rejectValue(
                     violation.getPropertyPath().toString(),
                     violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
@@ -280,10 +357,10 @@ public class FilmsPutTests {
         filmController.addFilm(film, bindingResultFilm);
 
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(updateToFilm, "film");
-        Set<ConstraintViolation<Film>> violations = validator.validateValue(Film.class, "releaseDate",
+        Set<ConstraintViolation<UpdateFilmRequest>> violations = validator.validateValue(UpdateFilmRequest.class, "releaseDate",
                 LocalDate.of(1895, 12, 27));
 
-        for (ConstraintViolation<Film> violation : violations) {
+        for (ConstraintViolation<UpdateFilmRequest> violation : violations) {
             bindingResult.rejectValue(
                     violation.getPropertyPath().toString(),
                     violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
@@ -296,15 +373,26 @@ public class FilmsPutTests {
 
     @Test
     void testUpdateFilmWithDuration1() {
-        Film film = Film.builder()
-                .id(1L)
+        Mpa mpa = new Mpa();
+        mpa.setId(1);
+        mpa.setName("G");
+
+        List<Genre> genres = new ArrayList<>();
+        Genre genre = new Genre();
+        genre.setId(1);
+        genre.setName("Комедия");
+        genres.add(genre);
+
+        NewFilmRequest film = NewFilmRequest.builder()
                 .name("Фильм")
                 .description(new String((new char[200])))
                 .releaseDate(LocalDate.of(1989, 12, 12))
                 .duration(100)
+                .mpa(mpa)
+                .genres(genres)
                 .build();
 
-        Film updateToFilm = Film.builder()
+        UpdateFilmRequest updateToFilm = UpdateFilmRequest.builder()
                 .id(1L)
                 .name("Новый фильм")
                 .description("Новое описание фильма")
@@ -312,10 +400,20 @@ public class FilmsPutTests {
                 .duration(1)
                 .build();
 
-        BeanPropertyBindingResult bindingResultFilm = new BeanPropertyBindingResult(film, "film");
-        Set<ConstraintViolation<Film>> violationsFilm = validator.validate(film);
+        FilmDto expectedFilm = FilmDto.builder()
+                .id(1L)
+                .name("Новый фильм")
+                .description("Новое описание фильма")
+                .releaseDate(LocalDate.of(1988, 11, 11))
+                .duration(1)
+                .mpa(mpa)
+                .genres(genres)
+                .build();
 
-        for (ConstraintViolation<Film> violation : violationsFilm) {
+        BeanPropertyBindingResult bindingResultFilm = new BeanPropertyBindingResult(film, "film");
+        Set<ConstraintViolation<NewFilmRequest>> violationsFilm = validator.validate(film);
+
+        for (ConstraintViolation<NewFilmRequest> violation : violationsFilm) {
             bindingResultFilm.rejectValue(
                     violation.getPropertyPath().toString(),
                     violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
@@ -326,9 +424,9 @@ public class FilmsPutTests {
         filmController.addFilm(film, bindingResultFilm);
 
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(updateToFilm, "film");
-        Set<ConstraintViolation<Film>> violations = validator.validate(updateToFilm);
+        Set<ConstraintViolation<UpdateFilmRequest>> violations = validator.validate(updateToFilm);
 
-        for (ConstraintViolation<Film> violation : violations) {
+        for (ConstraintViolation<UpdateFilmRequest> violation : violations) {
             bindingResult.rejectValue(
                     violation.getPropertyPath().toString(),
                     violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
@@ -336,22 +434,33 @@ public class FilmsPutTests {
             );
         }
 
-        Film updatedFilm = filmController.updateFilm(updateToFilm, bindingResult);
+        FilmDto updatedFilm = filmController.updateFilm(updateToFilm, bindingResult);
 
-        Assertions.assertEquals(updateToFilm, updatedFilm);
+        Assertions.assertEquals(expectedFilm, updatedFilm);
     }
 
     @Test
     void testUpdateFilmWithDuration0() {
-        Film film = Film.builder()
-                .id(1L)
+        Mpa mpa = new Mpa();
+        mpa.setId(1);
+        mpa.setName("G");
+
+        List<Genre> genres = new ArrayList<>();
+        Genre genre = new Genre();
+        genre.setId(1);
+        genre.setName("Комедия");
+        genres.add(genre);
+
+        NewFilmRequest film = NewFilmRequest.builder()
                 .name("Фильм")
                 .description(new String((new char[200])))
                 .releaseDate(LocalDate.of(1989, 12, 12))
                 .duration(100)
+                .mpa(mpa)
+                .genres(genres)
                 .build();
 
-        Film updateToFilm = Film.builder()
+        UpdateFilmRequest updateToFilm = UpdateFilmRequest.builder()
                 .id(1L)
                 .name("Новый фильм")
                 .description("Новое описание фильма")
@@ -360,9 +469,9 @@ public class FilmsPutTests {
                 .build();
 
         BeanPropertyBindingResult bindingResultFilm = new BeanPropertyBindingResult(film, "film");
-        Set<ConstraintViolation<Film>> violationsFilm = validator.validate(film);
+        Set<ConstraintViolation<NewFilmRequest>> violationsFilm = validator.validate(film);
 
-        for (ConstraintViolation<Film> violation : violationsFilm) {
+        for (ConstraintViolation<NewFilmRequest> violation : violationsFilm) {
             bindingResultFilm.rejectValue(
                     violation.getPropertyPath().toString(),
                     violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
@@ -373,9 +482,9 @@ public class FilmsPutTests {
         filmController.addFilm(film, bindingResultFilm);
 
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(updateToFilm, "film");
-        Set<ConstraintViolation<Film>> violations = validator.validateValue(Film.class, "duration", 0);
+        Set<ConstraintViolation<UpdateFilmRequest>> violations = validator.validateValue(UpdateFilmRequest.class, "duration", 0);
 
-        for (ConstraintViolation<Film> violation : violations) {
+        for (ConstraintViolation<UpdateFilmRequest> violation : violations) {
             bindingResult.rejectValue(
                     violation.getPropertyPath().toString(),
                     violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),

@@ -6,6 +6,7 @@ import ru.yandex.practicum.filmorate.validation.annotations.IsDateAfter;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -21,8 +22,8 @@ public class Film {
     @Positive(message = "Продолжительность фильма должна быть больше 0")
     private int duration;
     private final Set<Long> likes = new HashSet<>();
-    private Set<Genre> genres;
-    private MPARating mpaRating;
+    private List<Genre> genres;
+    private Mpa mpa;
 
     public void setNewLike(Long userId) {
         likes.add(userId);
