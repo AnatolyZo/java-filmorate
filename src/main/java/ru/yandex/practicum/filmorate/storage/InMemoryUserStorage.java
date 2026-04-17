@@ -3,14 +3,10 @@ package ru.yandex.practicum.filmorate.storage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.validation.BindingResult;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.validation.ValidationResults;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -24,8 +20,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User addUser(User user, BindingResult bindingResult) {
-        ValidationResults.extract(bindingResult);
+    public User addUser(User user) {
 
         user.setId(getNextId());
         log.debug("Новому пользователю присвоен id {}", user.getId());
@@ -43,13 +38,16 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User updateUser(User newUser, BindingResult bindingResult) {
+    public Optional<User> findUserById(long userId) {
+        return Optional.ofNullable(users.get(userId));
+    }
+
+    @Override
+    public User updateUser(User newUser) {
         if (newUser.getId() == null) {
             log.info("Не передан id пользователя");
             throw new RuntimeException("ID не указан, невозможно извлечь данные");
         }
-
-        ValidationResults.extract(bindingResult);
 
         if (users.containsKey(newUser.getId())) {
             fillNameIfEmpty(newUser);
@@ -71,16 +69,53 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User getUser(long userId) {
-        return users.get(userId);
+    public void addFriend(long userId, long friendId) {
+        User user = users.get(userId);
+        User friend = users.get(friendId);
+
+        if (friend.checkFriendExist(userId)) {
+            user.setNewFriend(friendId, true);
+            friend.setNewFriend(userId, true);
+        } else {
+            user.setNewFriend(friendId, false);
+        }
+
+        log.debug("Пользоатель с id {} добавил в друзья пользователя с id {}", userId, friendId);
     }
 
     @Override
-    public void validateId(long userId) {
-        if (users.get(userId) == null) {
-            log.info("Пользователь с id {} не найден", userId);
-            throw new NotFoundException(String.format("Пользователь с id %d не найден", userId));
+    public void removeFriend(long userId, long friendId) {
+        User user = users.get(userId);
+        User friend = users.get(friendId);
+
+        if (friend.checkFriendExist(userId)) {
+            friend.setNewFriend(userId, false);
         }
+
+        user.deleteFriend(friendId);
+        log.debug("Пользоатель с id {} удалил из друзей пользователя с id {}", userId, friendId);
+    }
+
+    @Override
+    public List<User> getUsersFriends(long friendId) {
+        User user = users.get(friendId);
+
+        return user.getFriends().stream()
+                .map(users::get)
+                .toList();
+    }
+
+    @Override
+    public List<User> getCommonFriends(long userId, long anotherUserId) {
+        User user = users.get(userId);
+        User otherUser = users.get(anotherUserId);
+
+        Set<Long> usersFriends = user.getFriends();
+        Set<Long> otherUsersFriends = otherUser.getFriends();
+        return usersFriends.stream()
+                .filter(otherUsersFriends::contains)
+                .map(users::get)
+                .toList();
     }
 
     //Метод по обновлению полей

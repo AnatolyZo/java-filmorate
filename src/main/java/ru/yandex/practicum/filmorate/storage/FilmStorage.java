@@ -1,21 +1,23 @@
 package ru.yandex.practicum.filmorate.storage;
 
-import org.springframework.validation.BindingResult;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public interface FilmStorage {
     Collection<Film> findAllFilms();
 
-    Film addFilm(Film film, BindingResult bindingResult);
+    Optional<Film> findFilmById(long filmId);
 
-    Film updateFilm(Film newFilm, BindingResult bindingResult);
+    Film addFilm(Film film);
 
-    Film getFilm(long filmId);
+    Film updateFilm(Film newFilm);
 
-    List<Film> sortFilms();
+    void addLike(long filmId, long userId);
 
-    void validateId(long filmId);
+    void deleteLike(long filmId, long userId);
+
+    List<Film> findMostPopularFilms(int count);
 }

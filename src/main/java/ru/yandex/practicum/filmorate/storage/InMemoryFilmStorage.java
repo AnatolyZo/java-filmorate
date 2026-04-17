@@ -3,10 +3,8 @@ package ru.yandex.practicum.filmorate.storage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.validation.BindingResult;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.validation.ValidationResults;
+import ru.yandex.practicum.filmorate.model.*;
 
 import java.util.*;
 
@@ -22,8 +20,12 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film addFilm(Film film, BindingResult bindingResult) {
-        ValidationResults.extract(bindingResult);
+    public Optional<Film> findFilmById(long filmId) {
+        return Optional.ofNullable(films.get(filmId));
+    }
+
+    @Override
+    public Film addFilm(Film film) {
 
         film.setId(getNextId());
         log.debug("Новому фильму присвоен id {}", film.getId());
@@ -40,11 +42,26 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film updateFilm(Film newFilm, BindingResult bindingResult) {
-        ValidationResults.extract(bindingResult);
+    public void addLike(long filmId, long userId) {
+        Film film = films.get(filmId);
+
+        film.setNewLike(userId);
+        log.debug("Фильму с id {} добавлен лайк от пользователя с id {}", filmId, userId);
+    }
+
+    @Override
+    public void deleteLike(long filmId, long userId) {
+        Film film = films.get(filmId);
+
+        film.deleteLike(userId);
+        log.debug("У фильма с id {} удален лайк от пользователя с id {}", filmId, userId);
+    }
+
+    @Override
+    public Film updateFilm(Film newFilm) {
 
         if (newFilm.getId() == null) {
-            log.info("Не передан id фильма");
+            log.warn("Не передан id объекта фильма {}", newFilm);
             throw new RuntimeException("ID не указан, невозможно извлечь данные");
         }
 
@@ -67,24 +84,11 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film getFilm(long filmId) {
-        return films.get(filmId);
-    }
-
-    //Сортировка фильмов с количеством лайков от большего к меньшему
-    @Override
-    public List<Film> sortFilms() {
+    public List<Film> findMostPopularFilms(int count) {
         return films.values().stream()
                 .sorted(Comparator.comparing(Film::countLikes).reversed())
+                .limit(count)
                 .toList();
-    }
-
-    @Override
-    public void validateId(long filmId) {
-        if (films.get(filmId) == null) {
-            log.info("Фильм c id {} не найден", filmId);
-            throw new NotFoundException(String.format("Фильм c id %d не найден", filmId));
-        }
     }
 
     //Метод по обновлению полей

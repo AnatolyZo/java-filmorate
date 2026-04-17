@@ -1,64 +1,86 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.BindingResult;
+import ru.yandex.practicum.filmorate.dto.NewUserRequest;
+import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
+import ru.yandex.practicum.filmorate.dto.UserDto;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.validation.ValidationResults;
 
 import java.util.List;
-import java.util.Set;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class UserService {
     private final UserStorage userStorage;
 
-    public User addFriend(long userId, long friendId) {
-        userStorage.validateId(userId);
-        userStorage.validateId(friendId);
-        User user = userStorage.getUser(userId);
-        User friend = userStorage.getUser(friendId);
-
-        user.setNewFriend(friendId);
-        friend.setNewFriend(userId);
-        log.debug("Пользоатель с id {} добавил в друзья пользователя с id {}", userId, friendId);
-        return user;
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {
+        this.userStorage = userStorage;
     }
 
-    public User deleteFriend(long userId, long friendId) {
-        userStorage.validateId(userId);
-        userStorage.validateId(friendId);
-        User user = userStorage.getUser(userId);
-        User friend = userStorage.getUser(friendId);
-
-        user.deleteFriend(friendId);
-        friend.deleteFriend(userId);
-        log.debug("Пользоатель с id {} удалил из друзей пользователя с id {}", userId, friendId);
-        return friend;
-    }
-
-    public List<User> showFriends(long userId) {
-        userStorage.validateId(userId);
-        User user = userStorage.getUser(userId);
-
-        return user.getFriends().stream()
-                .map(userStorage::getUser)
+    public List<UserDto> findAllUsers() {
+        return userStorage.findAllUsers().stream()
+                .map(UserMapper::mapToUserDto)
                 .toList();
     }
 
-    public List<User> showCommonFriends(long userId, long otherId) {
-        userStorage.validateId(userId);
-        userStorage.validateId(otherId);
-        User user = userStorage.getUser(userId);
-        User otherUser = userStorage.getUser(otherId);
+    public UserDto addUser(NewUserRequest request, BindingResult bindingResult) {
+        ValidationResults.extract(bindingResult);
 
-        Set<Long> usersFriends = user.getFriends();
-        Set<Long> otherUsersFriends = otherUser.getFriends();
-        return usersFriends.stream()
-                .filter(otherUsersFriends::contains)
-                .map(userStorage::getUser)
+        User user = UserMapper.mapToUser(request);
+        user = userStorage.addUser(user);
+        return UserMapper.mapToUserDto(user);
+    }
+
+    public UserDto updateUser(UpdateUserRequest request, BindingResult bindingResult) {
+        ValidationResults.extract(bindingResult);
+
+        User updatedUser = userStorage.findUserById(request.getId())
+                .map(user -> UserMapper.updateUserFields(user, request))
+                .orElseThrow(() -> new NotFoundException(String.format("Пользователь с ID %d не найден", request.getId())));
+
+        updatedUser = userStorage.updateUser(updatedUser);
+
+        return UserMapper.mapToUserDto(updatedUser);
+    }
+
+    public void addFriend(long userId, long friendId) {
+        validateId(userId, friendId);
+        userStorage.addFriend(userId, friendId);
+    }
+
+    public void deleteFriend(long userId, long friendId) {
+        validateId(userId, friendId);
+        userStorage.removeFriend(userId, friendId);
+    }
+
+    public List<UserDto> showFriends(long userId) {
+        validateId(userId);
+        return userStorage.getUsersFriends(userId).stream()
+                .map(UserMapper::mapToUserDto)
                 .toList();
+    }
+
+    public List<UserDto> showCommonFriends(long userId, long otherId) {
+        validateId(userId, otherId);
+        return userStorage.getCommonFriends(userId, otherId).stream()
+                .map(UserMapper::mapToUserDto)
+                .toList();
+    }
+
+    private void validateId(long... params) {
+        for (long id : params) {
+            userStorage.findUserById(id)
+                    .orElseThrow(() -> {
+                        log.info("Пользователь c id {} не найден", id);
+                        return new NotFoundException(String.format("Пользователь c id %d не найден", id));
+                    });
+        }
     }
 }

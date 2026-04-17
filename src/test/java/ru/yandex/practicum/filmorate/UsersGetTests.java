@@ -10,7 +10,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.validation.BeanPropertyBindingResult;
 import ru.yandex.practicum.filmorate.controller.UserController;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.dto.NewUserRequest;
+import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 
@@ -22,8 +23,8 @@ import java.util.Set;
 
 public class UsersGetTests {
     private UserController userController;
-    private InMemoryUserStorage inMemoryUserStorage = new InMemoryUserStorage();
-    private UserService userService = new UserService(inMemoryUserStorage);
+    private final InMemoryUserStorage inMemoryUserStorage = new InMemoryUserStorage();
+    private final UserService userService = new UserService(inMemoryUserStorage);
     private Validator validator;
 
     @AfterEach
@@ -33,21 +34,42 @@ public class UsersGetTests {
 
     @BeforeEach
     void setUp() {
-        userController = new UserController(inMemoryUserStorage, userService);
+        userController = new UserController(userService);
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
     }
 
     @Test
     void testFindAllUsersWhenNoUsersAdded() {
-        Collection<User> users = userController.findAllUsers();
+        Collection<UserDto> users = userController.findAllUsers();
 
         Assertions.assertTrue(users.isEmpty());
     }
 
     @Test
     void testFindAllUsersWhen3UsersAdded() {
-        User user1 = User.builder()
+        NewUserRequest user1 = NewUserRequest.builder()
+                .email("email1@ya.ru")
+                .login("Login1")
+                .name("Name1")
+                .birthday(LocalDate.of(1989, 12, 12))
+                .build();
+
+        NewUserRequest user2 = NewUserRequest.builder()
+                .email("email2@ya.ru")
+                .login("Login2")
+                .name("Name2")
+                .birthday(LocalDate.of(1996, 7, 2))
+                .build();
+
+        NewUserRequest user3 = NewUserRequest.builder()
+                .email("email3@ya.ru")
+                .login("Login3")
+                .name("Name3")
+                .birthday(LocalDate.of(1984, 11, 18))
+                .build();
+
+        UserDto user1Dto = UserDto.builder()
                 .id(1L)
                 .email("email1@ya.ru")
                 .login("Login1")
@@ -55,7 +77,7 @@ public class UsersGetTests {
                 .birthday(LocalDate.of(1989, 12, 12))
                 .build();
 
-        User user2 = User.builder()
+        UserDto user2Dto = UserDto.builder()
                 .id(2L)
                 .email("email2@ya.ru")
                 .login("Login2")
@@ -63,7 +85,7 @@ public class UsersGetTests {
                 .birthday(LocalDate.of(1996, 7, 2))
                 .build();
 
-        User user3 = User.builder()
+        UserDto user3Dto = UserDto.builder()
                 .id(3L)
                 .email("email3@ya.ru")
                 .login("Login3")
@@ -71,15 +93,15 @@ public class UsersGetTests {
                 .birthday(LocalDate.of(1984, 11, 18))
                 .build();
 
-        Map<Long, User> expectedMap = new HashMap<>();
-        expectedMap.put(user1.getId(), user1);
-        expectedMap.put(user2.getId(), user2);
-        expectedMap.put(user3.getId(), user3);
+        Map<Long, UserDto> expectedMap = new HashMap<>();
+        expectedMap.put(user1Dto.getId(), user1Dto);
+        expectedMap.put(user2Dto.getId(), user2Dto);
+        expectedMap.put(user3Dto.getId(), user3Dto);
 
         BeanPropertyBindingResult bindingResult1 = new BeanPropertyBindingResult(user1, "user");
-        Set<ConstraintViolation<User>> violations1 = validator.validate(user1);
+        Set<ConstraintViolation<NewUserRequest>> violations1 = validator.validate(user1);
 
-        for (ConstraintViolation<User> violation : violations1) {
+        for (ConstraintViolation<NewUserRequest> violation : violations1) {
             bindingResult1.rejectValue(
                     violation.getPropertyPath().toString(),
                     violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
@@ -90,9 +112,9 @@ public class UsersGetTests {
         userController.addUser(user1, bindingResult1);
 
         BeanPropertyBindingResult bindingResult2 = new BeanPropertyBindingResult(user2, "user");
-        Set<ConstraintViolation<User>> violations2 = validator.validate(user2);
+        Set<ConstraintViolation<NewUserRequest>> violations2 = validator.validate(user2);
 
-        for (ConstraintViolation<User> violation : violations2) {
+        for (ConstraintViolation<NewUserRequest> violation : violations2) {
             bindingResult2.rejectValue(
                     violation.getPropertyPath().toString(),
                     violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
@@ -103,9 +125,9 @@ public class UsersGetTests {
         userController.addUser(user2, bindingResult2);
 
         BeanPropertyBindingResult bindingResult3 = new BeanPropertyBindingResult(user3, "user");
-        Set<ConstraintViolation<User>> violations3 = validator.validate(user3);
+        Set<ConstraintViolation<NewUserRequest>> violations3 = validator.validate(user3);
 
-        for (ConstraintViolation<User> violation : violations3) {
+        for (ConstraintViolation<NewUserRequest> violation : violations3) {
             bindingResult3.rejectValue(
                     violation.getPropertyPath().toString(),
                     violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
@@ -114,7 +136,7 @@ public class UsersGetTests {
         }
         userController.addUser(user3, bindingResult3);
 
-        Collection<User> users = userController.findAllUsers();
+        Collection<UserDto> users = userController.findAllUsers();
 
         Assertions.assertIterableEquals(expectedMap.values(), users);
     }

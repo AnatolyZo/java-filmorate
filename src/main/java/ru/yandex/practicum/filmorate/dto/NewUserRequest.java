@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.model;
+package ru.yandex.practicum.filmorate.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -9,13 +9,10 @@ import ru.yandex.practicum.filmorate.validation.annotations.IsContainsSpaceSigns
 import ru.yandex.practicum.filmorate.validation.annotations.IsDateBefore;
 
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 @Data
 @Builder
-public class User {
+public class NewUserRequest {
     private Long id;
     @NotNull
     @Email
@@ -26,21 +23,4 @@ public class User {
     private String name;
     @IsDateBefore
     private LocalDate birthday;
-    private final Map<Long, Boolean> friends = new HashMap<>();
-
-    public void setNewFriend(Long friendId, boolean friendshipStatus) {
-        friends.put(friendId, friendshipStatus);
-    }
-
-    public void deleteFriend(Long friendId) {
-        friends.remove(friendId);
-    }
-
-    public boolean checkFriendExist(Long userId) {
-        return friends.containsKey(userId);
-    }
-
-    public Set<Long> getFriends() {
-        return friends.keySet();
-    }
 }
