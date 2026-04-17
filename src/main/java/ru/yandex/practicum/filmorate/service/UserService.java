@@ -51,23 +51,36 @@ public class UserService {
     }
 
     public void addFriend(long userId, long friendId) {
-
+        validateId(userId, friendId);
         userStorage.addFriend(userId, friendId);
     }
 
     public void deleteFriend(long userId, long friendId) {
+        validateId(userId, friendId);
         userStorage.removeFriend(userId, friendId);
     }
 
     public List<UserDto> showFriends(long userId) {
+        validateId(userId);
         return userStorage.getUsersFriends(userId).stream()
                 .map(UserMapper::mapToUserDto)
                 .toList();
     }
 
     public List<UserDto> showCommonFriends(long userId, long otherId) {
+        validateId(userId, otherId);
         return userStorage.getCommonFriends(userId, otherId).stream()
                 .map(UserMapper::mapToUserDto)
                 .toList();
+    }
+
+    private void validateId(long... params) {
+        for (long id : params) {
+            userStorage.findUserById(id)
+                    .orElseThrow(() -> {
+                        log.info("Пользователь c id {} не найден", id);
+                        return new NotFoundException(String.format("Пользователь c id %d не найден", id));
+                    });
+        }
     }
 }

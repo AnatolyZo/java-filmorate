@@ -31,8 +31,6 @@ public class InMemoryFilmStorage implements FilmStorage {
         log.debug("Новому фильму присвоен id {}", film.getId());
 
         try {
-            setGenresToFilm(film);
-            setMpaRatingToFilm(film);
             films.put(film.getId(), film);
             log.debug("Добавлен новый фильм с id {}", film.getId());
         } catch (RuntimeException e) {
@@ -45,8 +43,6 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public void addLike(long filmId, long userId) {
-        validateId(filmId);
-        validateId(userId);
         Film film = films.get(filmId);
 
         film.setNewLike(userId);
@@ -55,8 +51,6 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public void deleteLike(long filmId, long userId) {
-        validateId(filmId);
-        validateId(userId);
         Film film = films.get(filmId);
 
         film.deleteLike(userId);
@@ -67,7 +61,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     public Film updateFilm(Film newFilm) {
 
         if (newFilm.getId() == null) {
-            log.info("Не передан id фильма");
+            log.warn("Не передан id объекта фильма {}", newFilm);
             throw new RuntimeException("ID не указан, невозможно извлечь данные");
         }
 
@@ -97,13 +91,6 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .toList();
     }
 
-    private void validateId(long filmId) {
-        if (films.get(filmId) == null) {
-            log.info("Фильм c id {} не найден", filmId);
-            throw new NotFoundException(String.format("Фильм c id %d не найден", filmId));
-        }
-    }
-
     //Метод по обновлению полей
     private void updateFields(Film updatingFilm, Film newFilm) {
         updatingFilm.setName(newFilm.getName());
@@ -124,26 +111,5 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .max()
                 .orElse(0);
         return ++currentMaxId;
-    }
-
-    private void setGenresToFilm(Film film) {
-        if (film.getGenres() != null) {
-            List<Genre> genres = film.getGenres().stream()
-                    .map(genre -> {
-                        Genre newGenre = new Genre();
-                        newGenre.setId(genre.getId());
-                        newGenre.setName(Genres.getDescription(genre.getId()));
-                        return newGenre;
-                    })
-                    .distinct()
-                    .toList();
-
-            film.setGenres(genres);
-        }
-    }
-
-    private void setMpaRatingToFilm(Film film) {
-        Mpa mpa = film.getMpa();
-        film.getMpa().setName(MpaRating.getDescription(mpa.getId()));
     }
 }

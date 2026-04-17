@@ -70,9 +70,6 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public void addFriend(long userId, long friendId) {
-        validateId(userId);
-        validateId(friendId);
-
         User user = users.get(userId);
         User friend = users.get(friendId);
 
@@ -88,8 +85,6 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public void removeFriend(long userId, long friendId) {
-        validateId(userId);
-        validateId(friendId);
         User user = users.get(userId);
         User friend = users.get(friendId);
 
@@ -103,7 +98,6 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public List<User> getUsersFriends(long friendId) {
-        validateId(friendId);
         User user = users.get(friendId);
 
         return user.getFriends().stream()
@@ -113,8 +107,6 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public List<User> getCommonFriends(long userId, long anotherUserId) {
-        validateId(userId);
-        validateId(anotherUserId);
         User user = users.get(userId);
         User otherUser = users.get(anotherUserId);
 
@@ -124,13 +116,6 @@ public class InMemoryUserStorage implements UserStorage {
                 .filter(otherUsersFriends::contains)
                 .map(users::get)
                 .toList();
-    }
-
-    private void validateId(long userId) {
-        if (users.get(userId) == null) {
-            log.info("Пользователь с id {} не найден", userId);
-            throw new NotFoundException(String.format("Пользователь с id %d не найден", userId));
-        }
     }
 
     //Метод по обновлению полей

@@ -5,13 +5,13 @@ Template repository for Filmorate project.
 ## Получение всех фильмов
 ```sql
 SELECT
-     f.film_id
-     f.name
-     f.description
-     f.release_date
-     f.duration
-     r.rating_id AS mpa_id
-     r.rating AS mpa_name
+     f.film_id,
+     f.name,
+     f.description,
+     f.release_date,
+     f.duration,
+     r.rating_id AS mpa_id,
+     r.rating AS mpa_name,
      GROUP_CONCAT(CONCAT(g.genre_id, ' ', g.genre) ORDER BY g.genre_id SEPARATOR ', ') AS genre_list
 FROM films f
 JOIN ratings AS r ON f.rating_id = r.rating_id
@@ -23,13 +23,13 @@ GROUP BY f.film_id, f.name, f.description, f.release_date, f.duration, f.rating_
 ## Получение N наиболее популярных фильмов
 ```sql
 SELECT
-    f.film_id
-    f.name
-    f.description
-    f.release_date
-    f.duration
-    r.rating_id AS mpa_id
-    r.rating AS mpa_name
+    f.film_id,
+    f.name,
+    f.description,
+    f.release_date,
+    f.duration,
+    r.rating_id AS mpa_id,
+    r.rating AS mpa_name,
     GROUP_CONCAT(CONCAT(g.genre_id, ' ', g.genre) ORDER BY g.genre_id SEPARATOR ', ') AS genre_list
 FROM films AS f
 JOIN ratings AS r ON f.rating_id = r.rating_id
@@ -38,10 +38,10 @@ LEFT JOIN genres AS g ON fg.genre_id = g.genre_id
 JOIN (
    SELECT film_id,
           COUNT(user_id) AS likes
-          FROM films_likes
-          GROUP BY film_id
-          ORDER BY likes
-          LIMIT ?) AS popular_films ON f.film_id = popular_films.film_id
+   FROM films_likes
+   GROUP BY film_id
+   ORDER BY likes
+   LIMIT ?) AS popular_films ON f.film_id = popular_films.film_id
 GROUP BY f.film_id, f.name, f.description, f.release_date, f.duration, f.rating_id
 ORDER BY popular_films.likes DESC;
 ```

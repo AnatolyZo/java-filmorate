@@ -98,7 +98,12 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         );
         film.setId(id);
 
-        insertGenre(id, film.getGenres());
+        if (film.getGenres() != null) {
+            for (Genre genre : film.getGenres()) {
+                processQuery(FilmDbStorage.INSERT_GENRES_QUERY, id, genre.getId());
+            }
+        }
+
         log.debug("Добавлен фильм {}", film);
         return film;
     }
@@ -132,13 +137,5 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public List<Film> findMostPopularFilms(int count) {
         return findAll(FIND_MOST_POPULAR_FILMS_QUERY, count);
-    }
-
-    private void insertGenre(long filmId, List<Genre> genres) {
-        if (genres != null) {
-            genres.stream()
-                    .distinct()
-                    .forEach(genre -> processQuery(FilmDbStorage.INSERT_GENRES_QUERY, filmId, genre.getId()));
-        }
     }
 }
