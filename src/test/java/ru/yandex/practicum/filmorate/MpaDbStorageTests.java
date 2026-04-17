@@ -22,7 +22,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @JdbcTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 @ContextConfiguration(initializers = {ConfigDataApplicationContextInitializer.class})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class MpaDbStorageTests {

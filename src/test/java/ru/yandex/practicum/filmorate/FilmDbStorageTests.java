@@ -27,7 +27,7 @@ import java.util.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @JdbcTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 @ContextConfiguration(initializers = {ConfigDataApplicationContextInitializer.class})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Sql(scripts = {"classpath:schema-films.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
